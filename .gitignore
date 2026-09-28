@@ -1,0 +1,20 @@
+# Fabric Installer Cache (wird bei Bedarf neu geladen)
+cache/
+
+# Lokale Test-/Arbeitsordner
+tmp/
+*.log
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Python
+__pycache__/
+*.pyc
+
+# Niemals die Server-Welt, Mods oder Konfigurationen committen
+world/
+server.properties
+eula.txt
+*.mca

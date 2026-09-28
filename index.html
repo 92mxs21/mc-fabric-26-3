@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>uwu uwu uwu - Minecraft 26.3 Fabric Server</title>
+<meta name="description" content="Minecraft 26.3 Fabric Server mit Terralith, Incendium, Nullscape, Tectonic, Voice Chat und Dream Displays. Ein-Klick-Setup.">
+<meta property="og:title" content="uwu uwu uwu - Minecraft 26.3 Fabric Server">
+<meta property="og:image" content="https://92mxs21.github.io/mc-fabric-26-3/server-icon.png">
+<link rel="icon" type="image/png" href="server-icon.png">
+<link rel="apple-touch-icon" href="server-icon.png">
+<style>
+  :root{
+    --pink:#f77ba6; --pink-dark:#d45b86; --grass:#68b840; --dirt:#7e593e;
+    --bg:#16110f; --card:#211a17; --line:#3a2d27; --txt:#f3e9e2; --dim:#b09c91;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--txt); min-height:100vh;
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    display:flex; flex-direction:column; align-items:center;
+    background-image:
+      radial-gradient(900px 500px at 50% -10%, rgba(247,123,166,.13), transparent),
+      radial-gradient(700px 400px at 50% 110%, rgba(104,184,64,.10), transparent);
+  }
+  .wrap{width:100%;max-width:820px;padding:48px 20px 64px;flex:1}
+  header{text-align:center;margin-bottom:36px}
+  header img{width:128px;height:128px;image-rendering:auto;filter:drop-shadow(0 10px 22px rgba(0,0,0,.5))}
+  h1{font-size:2rem;margin:16px 0 6px;letter-spacing:-.5px}
+  .sub{color:var(--dim);font-size:.95rem}
+  .sub b{color:var(--pink);font-weight:600}
+
+  /* Download-Button IST das Logo */
+  .dl{display:inline-block;margin:30px 0 8px;text-decoration:none;transition:transform .15s, filter .15s}
+  .dl:hover{transform:scale(1.07)}
+  .dl:active{transform:scale(.97)}
+  .dl img{
+    width:132px;height:132px;border-radius:14px;display:block;
+    box-shadow:0 0 0 4px var(--pink), 0 0 0 8px rgba(247,123,166,.18), 0 12px 30px rgba(0,0,0,.55);
+  }
+  .dl-label{
+    display:block;margin-top:14px;font-weight:700;font-size:1.05rem;color:var(--pink);
+    text-shadow:0 2px 10px rgba(247,123,166,.4);
+  }
+  .dl-sub{display:block;margin-top:3px;font-size:.82rem;color:var(--dim)}
+  .warn{color:#e8a04c;font-size:.78rem;margin-top:10px}
+
+  section{margin-top:40px}
+  h2{font-size:1.05rem;text-transform:uppercase;letter-spacing:1.4px;color:var(--dim);
+     margin-bottom:14px;display:flex;align-items:center;gap:10px}
+  h2::after{content:"";flex:1;height:1px;background:var(--line)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+  .mod{display:flex;align-items:center;gap:10px;background:#1a1412;border:1px solid var(--line);
+       border-radius:10px;padding:9px 12px}
+  .mod img{width:26px;height:26px;flex:none}
+  .mod .n{font-weight:600;font-size:.9rem}
+  .mod .v{color:var(--dim);font-size:.75rem;margin-left:auto;font-variant-numeric:tabular-nums}
+  .mod .w{font-size:.62rem;padding:1px 6px;border-radius:20px;font-weight:700}
+  .w.s{background:rgba(247,123,166,.18);color:#ffa8c6}
+  .w.c{background:rgba(120,150,255,.16);color:#9db0ff}
+
+  pre{background:#120d0c;border:1px solid var(--line);border-radius:10px;padding:14px 16px;
+      overflow-x:auto;font-size:.85rem;line-height:1.6;color:#cfe8c4}
+  code{font-family:ui-monospace,"Cascadia Code",Consolas,monospace}
+  ol,ul{padding-left:22px;color:var(--dim);line-height:1.85;font-size:.94rem}
+  ol b,ul b{color:var(--txt)}
+  a{color:var(--pink)}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  td,th{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--dim);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.6px}
+  td code{color:#cfe8c4;font-size:.85em}
+  footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);
+         text-align:center;color:var(--dim);font-size:.8rem}
+  footer img{width:34px;height:34px;opacity:.5;margin-bottom:8px;vertical-align:middle}
+  .badge{display:inline-block;background:#1a1412;border:1px solid var(--line);border-radius:20px;
+         padding:4px 12px;font-size:.75rem;color:var(--dim);margin:0 4px}
+  @media(max-width:480px){
+    header img{width:96px;height:96px}
+    .dl img{width:110px;height:110px}
+    h1{font-size:1.5rem}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <img src="server-icon.png" alt="uwu Server Logo" width="128" height="128">
+    <h1>uwu uwu uwu</h1>
+    <p class="sub">Minecraft <b>26.3</b> &middot; Fabric &middot; Weltgenerierung &amp; Voice Chat</p>
+
+    <a class="dl" href="bootstrap.cmd" download="mc-fabric-setup.cmd">
+      <img src="server-icon.png" alt="Setup herunterladen" width="132" height="132">
+      <span class="dl-label">Download &amp; Setup starten</span>
+      <span class="dl-sub">bootstrap.cmd &middot; 2 KB &middot; ein Klick</span>
+    </a>
+    <p class="warn">Rechtsklick &rarr; Als Administrator ausf&uuml;hren ist <b>nicht</b> n&ouml;tig</p>
+  </header>
+
+  <section>
+    <h2>Was das macht</h2>
+    <div class="card">
+      <ul>
+        <li>Schlie&szlig;t den Minecraft-Launcher</li>
+        <li>Sichert deinen Mods-Ordner <b>zeitgestempelt</b> (mit SHA-256-Manifest)</li>
+        <li>Installiert <b>Fabric 26.3</b> headless &ndash; kein Installer-Fenster, kein Klicken</li>
+        <li>Legt ein eigenes Mods-Verzeichnis an, damit sich Versionen nicht in die Quere kommen</li>
+        <li>L&auml;dt alle Mods von Modrinth und pr&uuml;ft sie</li>
+      </ul>
+      <p style="margin-top:14px">
+        Danach im Minecraft-Launcher das Profil <code>fabric-loader-26.3</code> w&auml;hlen und los.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Mods</h2>
+    <div class="grid">
+      <div class="mod"><img src="server-icon.png" alt=""><span class="n">Fabric API</span><span class="w c">Basis</span><span class="v">0.161.0</span></div>
+      <div class="mod"><img src="server-icon.png" alt=""><span class="n">Tectonic</span><span class="v">3.0.31</span></div>
+      <div class="mod"><img src="server-icon.png" alt=""><span class="n">Lithostitched</span><span class="v">2.0.4</span></div>
+      <div class="mod"><img src="server-icon.png" alt=""><span class="n">Terralith</span><span class="v">2.6.5</span></div>
+      <div class="mod"><img src="server-icon.png" alt=""><span class="n">Incendium</span><span class="v">5.5.3</span></div>
+      <div class="mod"><img src="server-icon.png" alt=""><span class="n">Nullscape</span><span class="v">2.0.0</span></div>
+      <div class="mod"><img src="server-icon.png" alt=""><span class="n">Lithium</span><span class="w c">Server</span><span class="v">0.26.2</span></div>
+      <div class="mod"><img src="server-icon.png" alt=""><span class="n">Simple Voice Chat</span><span class="w s">Voice</span><span class="v">2.6.24</span></div>
+      <div class="mod"><img src="server-icon.png" alt=""><span class="n">Dream Displays</span><span class="w s">Display</span><span class="v">1.10.0</span></div>
+      <div class="mod"><img src="server-icon.png" alt=""><span class="n">Chunky</span><span class="w c">Server</span><span class="v">1.5.3</span></div>
+      <div class="mod"><img src="server-icon.png" alt=""><span class="n">Sodium</span><span class="w s">Client</span><span class="v">0.9.3a</span></div>
+      <div class="mod"><img src="server-icon.png" alt=""><span class="n">Iris</span><span class="w s">Client</span><span class="v">1.11.6</span></div>
+      <div class="mod"><img src="server-icon.png" alt=""><span class="n">Sodium Extra</span><span class="w s">Client</span><span class="v">0.9.4</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Getrennte Mods-Ordner</h2>
+    <div class="card">
+      <p style="color:var(--dim);margin-bottom:12px">Damit 26.3 mit Mods und andere Versionen ohne laufen:</p>
+      <table>
+        <tr><th>Profil</th><th>Ordner</th></tr>
+        <tr><td>Vanilla 26.3</td><td><code>.minecraft\mods</code></td></tr>
+        <tr><td>Fabric 26.3</td><td><code>.minecraft\mods26.3</code></td></tr>
+      </table>
+      <p style="color:var(--dim);margin-top:12px">
+        Gesteuert &uuml;ber <code>-Dfabric.modsFolder</code>. Welten, Einstellungen und
+        Ressourcenpakete bleiben geteilt &ndash; nur die Mods sind getrennt.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Server</h2>
+    <div class="card">
+      <table>
+        <tr><td>Version</td><td><code>Minecraft 26.3 &middot; Fabric 0.19.5</code></td></tr>
+        <tr><td>Spielport</td><td><code>TCP 25565</code></td></tr>
+        <tr><td>Voice Chat</td><td><code>UDP 24454</code> &rarr; <code>della-otis.tun.ply.gg:4243</code></td></tr>
+        <tr><td>Pl&auml;tze</td><td>20</td></tr>
+        <tr><td>RAM</td><td>6 GB</td></tr>
+      </table>
+      <p style="color:var(--dim);margin-top:12px">
+        Beitreten: Minecraft 26.3 + Profil <code>fabric-loader-26.3</code>, dann
+        Multiplayer und die playit-Adresse.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Backup</h2>
+    <div class="card">
+      <p style="color:var(--dim)">Das Setup sichert vorher automatisch, mit Zeitstempel und Pr&uuml;fsummen:</p>
+      <pre><code>.minecraft\backups\mods\mods-backup_JJJJ-MM-TT_HH-mm-ss\
+  ├─ fabric-api-0.161.0+26.3.jar
+  ├─ ...
+  └─ _manifest.txt   (SHA-256, Gr&ouml;&szlig;e, Zeitstempel)</code></pre>
+    </div>
+  </section>
+
+  <footer>
+    <img src="server-icon.png" alt="" width="34" height="34"><br>
+    <span class="badge">Minecraft 26.3</span><span class="badge">Fabric</span><span class="badge">Java 25</span>
+    <p style="margin-top:14px">
+      Nicht von Mojang oder Microsoft offiziell unterst&uuml;tzt.<br>
+      <a href="https://github.com/92mxs21/mc-fabric-26-3">Quellcode auf GitHub</a>
+    </p>
+  </footer>
+
+</div>
+</body>
+</html>

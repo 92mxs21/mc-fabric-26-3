@@ -1,0 +1,11 @@
+# Die .cmd wird von GitHub Pages 1:1 aus dem Blob ausgeliefert.
+# Ohne "-text" wuerde Git die CRLF beim Commit zu LF normalisieren und
+# cmd.exe bekaeme eine Datei ohne CRLF - die bricht bei_labels und if/else.
+*.cmd -text
+*.bat -text
+
+# Rest bleibt LF, das ist fuer alles andere in Ordnung
+*.ps1 text eol=lf
+*.py  text eol=lf
+*.html text eol=lf
+*.md  text eol=lf
