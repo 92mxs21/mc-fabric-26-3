@@ -150,10 +150,12 @@ if (-not (Test-Path $backupScript) -and (Test-Path $ModsPath)) {
 
 if (Test-Path $ModsPath) {
     if (Test-Path $backupScript) {
-        & $backupScript -ModsDir $ModsPath -BackupRoot $BackupRoot | Out-Null
-        $latest = Get-ChildItem $BackupRoot -Directory -Filter 'mods-backup_*' -ErrorAction SilentlyContinue |
-                  Sort-Object Name -Descending | Select-Object -First 1
-        if ($latest) { Say "  Gesichert nach: $($latest.Name)" 'Green' }
+        # -Prune 5: jedes Backup sind ~38 MB, ohne Begrenzung wachsen die
+        # Backups bei jedem Start um eine halbe Giga.
+        & $backupScript -ModsDir $ModsPath -BackupRoot $BackupRoot -Prune 5 | Out-Null
+        $kept = @(Get-ChildItem $BackupRoot -Directory -Filter 'mods-backup_*' -ErrorAction SilentlyContinue)
+        $latest = $kept | Sort-Object Name -Descending | Select-Object -First 1
+        if ($latest) { Say "  Gesichert nach: $($latest.Name)  (behalte die letzten $($kept.Count))" 'Green' }
     }
 } else {
     Say "  '$ModsFolder' existiert noch nicht - nichts zu sichern." 'DarkGray'
