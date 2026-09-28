@@ -77,6 +77,74 @@ $BackupRoot   = Join-Path $MinecraftDir 'backups\mods'
 
 function Say($msg, $color = 'Gray') { Write-Host $msg -ForegroundColor $color }
 
+# ---------------------------------------------------------------- Java finden
+# Der Fabric Installer ist eine JAR und laeuft nur mit Java. Auf manchen PCs
+# ist Java installiert, aber nicht im PATH - dann bricht "java -jar" mit
+# CommandNotFound ab. Wir suchen deshalb an allen ueblichen Orten.
+function Find-Java {
+    $cands = New-Object System.Collections.Generic.List[string]
+
+    $onPath = Get-Command 'java.exe' -ErrorAction SilentlyContinue
+    if ($onPath) { $cands.Add($onPath.Source) }
+
+    if ($env:JAVA_HOME) { $cands.Add((Join-Path $env:JAVA_HOME 'bin\java.exe')) }
+
+    # Registry: HKLM\SOFTWARE\JavaSoft\JDK\<Version>
+    foreach ($root in @('HKLM:\SOFTWARE\JavaSoft\JDK', 'HKLM:\SOFTWARE\JavaSoft\Java Development Kit')) {
+        if (Test-Path $root) {
+            Get-ChildItem $root -ErrorAction SilentlyContinue | ForEach-Object {
+                $p = (Get-ItemProperty $_.PSPath -ErrorAction SilentlyContinue).JavaHome
+                if ($p) { $cands.Add((Join-Path $p 'bin\java.exe')) }
+            }
+        }
+    }
+
+    # Bekannte Installationsorte
+    $globs = @(
+        "$env:ProgramFiles\Eclipse Adoptium\jdk-*\bin\java.exe",
+        "$env:ProgramFiles\Java\jdk-*\bin\java.exe",
+        "$env:ProgramFiles\Microsoft\jdk-*\bin\java.exe",
+        "$env:ProgramFiles\Zulu\zulu-*\bin\java.exe",
+        "$env:ProgramFiles\Amazon Corretto\jdk*\bin\java.exe",
+        "$env:LOCALAPPDATA\Programs\*jdk*\bin\java.exe",
+        "$env:LOCALAPPDATA\Programs\Eclipse Adoptium\jdk-*\bin\java.exe",
+        "$env:USERPROFILE\.jdks\jdk-*\bin\java.exe",
+        "$env:USERPROFILE\scoop\apps\openjdk*\current\bin\java.exe"
+    )
+    foreach ($g in $globs) {
+        Get-ChildItem $g -ErrorAction SilentlyContinue | ForEach-Object { $cands.Add($_.FullName) }
+    }
+
+    # Vom Minecraft-Launcher mitgebrachte Runtime
+    foreach ($n in @('javaw.exe', 'java.exe')) {
+        Get-ChildItem "$env:APPDATA\.minecraft\runtime" -Recurse -Filter $n -ErrorAction SilentlyContinue |
+            ForEach-Object { $cands.Add($_.FullName) }
+    }
+
+    # Vorhandene pruefen, Version ermitteln, hoechste gewinnt
+    $best = $null; $bestVer = $null
+    foreach ($c in $cands) {
+        if (-not $c) { continue }
+        if (-not (Test-Path $c)) { continue }
+        try {
+            $info = & $c -version 2>&1 | Out-String
+            if ($info -match 'version "([\d._]+)') {
+                $raw = $Matches[1] -replace '_', '.'
+                $ver = $null
+                [version]::TryParse((($raw -split '-')[0]), [ref]$ver) | Out-Null
+                if ($ver -and ($null -eq $bestVer -or $ver -gt $bestVer)) {
+                    $bestVer = $ver; $best = $c
+                }
+            }
+        } catch {
+            # Kandidat ist keine ausfuehrbare Java-Version -> ueberspringen
+        }
+    }
+
+    if ($best) { return [pscustomobject]@{ Path = $best; Version = $bestVer } }
+    return $null
+}
+
 function Test-FileLocked([string]$path) {
     if (-not (Test-Path $path)) { return $false }
     try {
@@ -96,7 +164,28 @@ function Wait-FileUnlocked([string]$path, [int]$maxSec = 30) {
     return $false
 }
 
-# ---------------------------------------------------------------- 1. Launcher schliessen
+# ---------------------------------------------------------------- 0. Java pruefen
+Say "`n=== 0/5  Java suchen ===" 'Cyan'
+$java = Find-Java
+if (-not $java) {
+    Say "  [FEHLER] Kein Java gefunden." 'Red'
+    Say "  Der Fabric Installer ist eine JAR und braucht zwingend Java." 'DarkGray'
+    Say "  Minecraft 26.3 verlangt Java 25." 'DarkGray'
+    Say ""
+    Say "  Installieren (kostenlos, ~180 MB):" 'White'
+    Say "    https://adoptium.net/temurin/releases/?version=25" 'Cyan'
+    Say ""
+    Say "  Danach dieses Script erneut starten." 'DarkGray'
+    exit 1
+}
+Say "  Gefunden: Java $($java.Version)" 'Green'
+Say "  Pfad    : $($java.Path)" 'DarkGray'
+# Fuer den Installer reicht Java 8+, das Spiel braucht 25 - nur kurz hinweisen
+if ($java.Version -lt [version]'25.0') {
+    Say "  Hinweis: Das Setup laeuft, aber Minecraft 26.3 braucht Java 25." 'Yellow'
+    Say "  Der Launcher sucht sich seine Version meist selbst." 'DarkGray'
+}
+
 Say "`n=== 1/5  Minecraft-Launcher ===" 'Cyan'
 $mc = @(Get-Process -ErrorAction SilentlyContinue | Where-Object {
     $_.ProcessName -eq 'Minecraft' -or $_.ProcessName -like 'MinecraftUWP*'
@@ -213,7 +302,7 @@ try {
 # Wichtig: nicht $args - das ist eine automatische PowerShell-Variable.
 $javaArgs = @('-jar', $InstallerJar, 'client', '-dir', $MinecraftDir,
              '-launcher', $LauncherType, '-mcversion', $MCVersion, '-loader', $Loader)
-Say "  > java $($javaArgs -join ' ')" 'DarkGray'
+Say "  > $($java.Path) $($javaArgs -join ' ')" 'DarkGray'
 
 $installerOk = $false
 for ($attempt = 1; $attempt -le 3 -and -not $installerOk; $attempt++) {
@@ -223,7 +312,7 @@ for ($attempt = 1; $attempt -le 3 -and -not $installerOk; $attempt++) {
         if (Test-Path $verJar) { [void](Wait-FileUnlocked $verJar 30) }
         Start-Sleep -Seconds 2
     }
-    $out = & java @javaArgs 2>&1 | Out-String
+    $out = & $java.Path @javaArgs 2>&1 | Out-String
     $out.TrimEnd() -split "`r?`n" | ForEach-Object { Say "    $_" 'DarkGray' }
 
     if ($LASTEXITCODE -eq 0) {
