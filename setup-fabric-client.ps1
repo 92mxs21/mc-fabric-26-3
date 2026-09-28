@@ -21,6 +21,7 @@ param(
     [string]$ModsFolder    = "mods26.3",
     [string]$MCVersion     = "26.3",
     [string]$Loader        = "0.19.5",
+    [string]$BaseUrl       = "https://92mxs21.github.io/mc-fabric-26-3/",
     [switch]$LauncherOpen,
     [switch]$Launch,
     [string]$Bootstrap     = ""
@@ -123,14 +124,28 @@ Say "  Minecraft-Ordner: $MinecraftDir" 'DarkGray'
 # ---------------------------------------------------------------- 2. Backup
 Say "`n=== 2/5  Backup ===" 'Cyan'
 $backupScript = Join-Path $PSScriptRoot 'mods-backup.ps1'
+
+# Beim Ein-Klick-Start liegt nur dieses eine Script im Temp-Ordner.
+# mods-backup.ps1 dann nachladen, sonst waere das Backup still uebersprungen.
+if (-not (Test-Path $backupScript) -and (Test-Path $ModsPath)) {
+    try {
+        Say "  Lade mods-backup.ps1 nach ..." 'DarkGray'
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest ($BaseUrl + 'mods-backup.ps1') -OutFile $backupScript -UseBasicParsing -TimeoutSec 120
+        Say "  nachgeladen." 'DarkGray'
+    } catch {
+        Say "  [WARNUNG] mods-backup.ps1 nicht ladbar - diesmal wird NICHT gesichert." 'Yellow'
+        Say "  Backup spaeter nachholen mit:" 'DarkYellow'
+        Say "    .\mods-backup.ps1 -ModsDir '$ModsPath'" 'DarkYellow'
+    }
+}
+
 if (Test-Path $ModsPath) {
     if (Test-Path $backupScript) {
         & $backupScript -ModsDir $ModsPath -BackupRoot $BackupRoot | Out-Null
         $latest = Get-ChildItem $BackupRoot -Directory -Filter 'mods-backup_*' -ErrorAction SilentlyContinue |
                   Sort-Object Name -Descending | Select-Object -First 1
-        Say "  Gesichert nach: $($latest.Name)" 'Green'
-    } else {
-        Say "  mods-backup.ps1 nicht gefunden, uebersprungen" 'Yellow'
+        if ($latest) { Say "  Gesichert nach: $($latest.Name)" 'Green' }
     }
 } else {
     Say "  '$ModsFolder' existiert noch nicht - nichts zu sichern." 'DarkGray'

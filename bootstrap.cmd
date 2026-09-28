@@ -14,6 +14,7 @@ color 0B
 REM Basis-URL der Website (GitHub Pages).
 set "BASE=https://92mxs21.github.io/mc-fabric-26-3/"
 set "SCRIPT=setup-fabric-client.ps1"
+set "AUX=mods-backup.ps1"
 set "DIR=%TEMP%\mc-fabric-bootstrap"
 set "PS1=%DIR%\%SCRIPT%"
 
@@ -42,6 +43,10 @@ if not exist "%PS1%" (
     echo   [FEHLER] Script wurde nicht gespeichert.
     goto :fail
 )
+
+REM --- Backup-Script mitnehmen (optional, das Hauptscript laedt es notfalls nach) ---
+curl.exe -fsSL --retry 2 --connect-timeout 15 -o "%DIR%\%AUX%" "%BASE%%AUX%" >nul 2>&1
+if exist "%DIR%\%AUX%" (echo   Lade %AUX% mit ...) else (echo   %AUX% nicht verfuegbar - wird nachgeladen)
 
 REM --- Groesse + Pruefsumme, ohne Abhaengigkeit von Get-FileHash ---
 REM     [System.Security.Cryptography.SHA256] ist immer da, das Cmdlet nicht
