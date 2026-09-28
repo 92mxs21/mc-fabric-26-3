@@ -49,7 +49,15 @@ if ($Bootstrap -ne "") {
     $len = (Get-Item $target).Length
     Write-Host "  $([math]::Round($len/1KB,1)) KB -> $target" -ForegroundColor Green
 
-    $sha = (Get-FileHash $target -Algorithm SHA256).Hash.ToLower()
+    $sha = 'n/a'
+    try {
+        # Ohne Get-FileHash, siehe Begruendung in mods-backup.ps1
+        $algo = [System.Security.Cryptography.SHA256]::Create()
+        try {
+            $sha = (-join ($algo.ComputeHash([IO.File]::ReadAllBytes($target)) |
+                       ForEach-Object { $_.ToString('x2') }))
+        } finally { $algo.Dispose() }
+    } catch { $sha = 'n/a' }
     Write-Host "  SHA256: $sha" -ForegroundColor DarkGray
 
     # Ausfuehren und alle Argumente durchreichen

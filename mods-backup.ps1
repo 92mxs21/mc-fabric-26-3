@@ -15,6 +15,23 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# Pruefsumme ohne Get-FileHash.
+# Grund: Ist PowerShell 7 installiert, steht dessen Modules-Ordner im
+# PSModulePath vor dem von Windows PowerShell 5.1. Beim Autoloaden findet
+# 5.1 dann das inkompatible Core-Modul und Get-FileHash fehlt komplett.
+# [System.Security.Cryptography.SHA256] gehoert zum Framework und geht immer.
+function Get-Sha256([string]$path, [int]$len = 64) {
+    $algo = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = $algo.ComputeHash([System.IO.File]::ReadAllBytes($path))
+        $hex = -join ($bytes | ForEach-Object { $_.ToString('x2') })
+        if ($hex.Length -gt $len) { return $hex.Substring(0, $len) }
+        return $hex
+    } finally {
+        $algo.Dispose()
+    }
+}
+
 if (-not (Test-Path $ModsDir)) {
     Write-Host "[FEHLER] Mods-Ordner nicht gefunden: $ModsDir" -ForegroundColor Red
     exit 1
@@ -48,7 +65,7 @@ $lines = @(
     ""
 )
 foreach ($j in ($jars | Sort-Object Name)) {
-    $hash = (Get-FileHash $j.FullName -Algorithm SHA256).Hash.Substring(0,16)
+    $hash = Get-Sha256 $j.FullName 16
     $lines += ('{0}  {1}  {2} MB' -f $hash, $j.Name.PadRight(48), [math]::Round($j.Length/1MB,2))
 }
 $lines | Set-Content $manifest -Encoding UTF8
