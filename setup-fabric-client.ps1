@@ -65,7 +65,7 @@ if ($Bootstrap -ne "") {
     if ($LauncherOpen) { $rest += '-LauncherOpen' }
     if ($Launch)       { $rest += '-Launch' }
     $rest += @('-MinecraftDir', $MinecraftDir, '-ModsFolder', $ModsFolder,
-               '-MCVersion', $MCVersion, '-Loader', $Loader)
+               '-MCVersion', $MCVersion, '-Loader', $Loader, '-BaseUrl', $BaseUrl)
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $target @rest
     exit $LASTEXITCODE
 }
@@ -189,9 +189,31 @@ else {
 Say "  Launcher-Modus: $LauncherType" 'DarkGray'
 Say "  Profildatei   : $((Split-Path $profilesFile -Leaf))" 'DarkGray'
 
-$args = @('-jar', $InstallerJar, 'client', '-dir', $MinecraftDir,
-          '-launcher', $LauncherType, '-mcversion', $MCVersion, '-loader', $Loader)
-Say "  > java $($args -join ' ')" 'DarkGray'
+# Profildatei vorher pruefen. Der Installer stirbt an Muell mit einem
+# Java-Stacktrace ab, das hier niemandem hilft.
+try {
+    $null = Get-Content $profilesFile -Raw | ConvertFrom-Json
+} catch {
+    Say "  [FEHLER] launcher_profiles.json ist kein gueltiges JSON." 'Red'
+    Say "  $($_.Exception.Message)" 'DarkGray'
+    Say "  Meist hilft: Minecraft-Launcher einmal starten und schliessen," 'DarkGray'
+    Say "  dann diese Datei loeschen - der Launcher legt sie neu an." 'DarkGray'
+    exit 1
+}
+
+# Sicherheitsnetz: der Installer schreibt in die Profildatei
+$profilesBackup = "$profilesFile.mcsetup-backup"
+try {
+    Copy-Item $profilesFile $profilesBackup -Force
+    Say "  Profildatei gesichert: $((Split-Path $profilesBackup -Leaf))" 'DarkGray'
+} catch {
+    Say "  [WARNUNG] Profildatei nicht sicherbar: $($_.Exception.Message)" 'Yellow'
+}
+
+# Wichtig: nicht $args - das ist eine automatische PowerShell-Variable.
+$javaArgs = @('-jar', $InstallerJar, 'client', '-dir', $MinecraftDir,
+             '-launcher', $LauncherType, '-mcversion', $MCVersion, '-loader', $Loader)
+Say "  > java $($javaArgs -join ' ')" 'DarkGray'
 
 $installerOk = $false
 for ($attempt = 1; $attempt -le 3 -and -not $installerOk; $attempt++) {
@@ -201,7 +223,7 @@ for ($attempt = 1; $attempt -le 3 -and -not $installerOk; $attempt++) {
         if (Test-Path $verJar) { [void](Wait-FileUnlocked $verJar 30) }
         Start-Sleep -Seconds 2
     }
-    $out = & java @args 2>&1 | Out-String
+    $out = & java @javaArgs 2>&1 | Out-String
     $out.TrimEnd() -split "`r?`n" | ForEach-Object { Say "    $_" 'DarkGray' }
 
     if ($LASTEXITCODE -eq 0) {
@@ -227,10 +249,13 @@ $versionId  = "fabric-loader-$Loader-$MCVersion"
 try {
     $pjson = Get-Content $profilesFile -Raw | ConvertFrom-Json
     $prof  = $pjson.profiles.$profileName
-    if ($prof -and $prof.lastVersionId -eq $versionId) {
-        Say "  Profil '$profileName' -> $versionId" 'Green'
+    # lastVersionId nur lesen wenn das Profil wirklich existiert, sonst
+    # waere der Warnungs-Zweig selbst der Fehler.
+    $actual = if ($prof) { $prof.lastVersionId } else { '<fehlt>' }
+    if ($prof -and $actual -eq $versionId) {
+        Say "  Profil '$profileName' -> $actual" 'Green'
     } else {
-        Say "  [WARNUNG] Profil '$profileName' fehlt oder zeigt auf '$($prof.lastVersionId)'." 'Yellow'
+        Say "  [WARNUNG] Profil '$profileName' zeigt auf '$actual' statt '$versionId'." 'Yellow'
         Say "  Im Launcher trotzdem nach 'fabric-loader-$MCVersion' schauen." 'Yellow'
     }
 } catch {
